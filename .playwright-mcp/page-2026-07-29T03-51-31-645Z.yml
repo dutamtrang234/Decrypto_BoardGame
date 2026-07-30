@@ -1,0 +1,20 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - link "Decrypto" [ref=f1e6] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f1e7]: Disconnected
+  - main [ref=f1e10]:
+    - generic [ref=f1e12]:
+      - generic [ref=f1e13]:
+        - heading "Decrypto" [level=1] [ref=f1e14]
+        - paragraph [ref=f1e15]: Encrypt your clues, decrypt theirs. A game of coded communication.
+      - generic [ref=f1e16]:
+        - generic [ref=f1e17]:
+          - generic [ref=f1e18]: Nickname
+          - textbox "Enter your nickname" [active] [ref=f1e19]
+        - button "Create Room" [disabled] [ref=f1e21]
+        - generic [ref=f1e22]: or join existing
+        - generic [ref=f1e27]:
+          - textbox "Room Code" [ref=f1e28]
+          - button "Join" [disabled] [ref=f1e29]
+      - generic [ref=f1e30]: Connecting to server...
