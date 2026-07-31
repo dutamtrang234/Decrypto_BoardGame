@@ -4,9 +4,14 @@ import type { PlayerData } from "../../types";
 interface Props {
   players: PlayerData[];
   playerId: string | null;
+  hostId: string | null;
+  gameInProgress: boolean;
 }
 
-export default function PlayerList({ players, playerId }: Props) {
+export default function PlayerList({ players, playerId, hostId, gameInProgress }: Props) {
+  const currentPlayer = players.find((p) => p.id === playerId);
+  const userIsHost = currentPlayer?.isHost || false;
+
   const seats = Array.from({ length: 8 }, (_, i) => {
     const player = players.find((p) => p.seatIndex === i) || null;
     return { player, seatIndex: i, isOwn: player?.id === playerId };
@@ -21,13 +26,13 @@ export default function PlayerList({ players, playerId }: Props) {
           {seats
             .filter((s) => s.player?.team === "blue")
             .map((s) => (
-              <PlayerSeat key={s.seatIndex} {...s} />
+              <PlayerSeat key={s.seatIndex} {...s} isHost={userIsHost} canKick={!gameInProgress} />
             ))}
           {seats
             .filter((s) => !s.player)
             .slice(0, 2)
             .map((s) => (
-              <PlayerSeat key={`empty-${s.seatIndex}`} {...s} />
+              <PlayerSeat key={`empty-${s.seatIndex}`} {...s} isHost={userIsHost} canKick={false} />
             ))}
         </div>
         <div className="space-y-2">
@@ -35,13 +40,13 @@ export default function PlayerList({ players, playerId }: Props) {
           {seats
             .filter((s) => s.player?.team === "red")
             .map((s) => (
-              <PlayerSeat key={s.seatIndex} {...s} />
+              <PlayerSeat key={s.seatIndex} {...s} isHost={userIsHost} canKick={!gameInProgress} />
             ))}
           {seats
             .filter((s) => !s.player)
             .slice(2, 4)
             .map((s) => (
-              <PlayerSeat key={`empty-${s.seatIndex}`} {...s} />
+              <PlayerSeat key={`empty-${s.seatIndex}`} {...s} isHost={userIsHost} canKick={false} />
             ))}
         </div>
       </div>

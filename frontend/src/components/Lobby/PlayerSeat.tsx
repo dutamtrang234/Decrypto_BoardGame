@@ -5,10 +5,12 @@ interface Props {
   player: PlayerData | null;
   seatIndex: number;
   isOwn: boolean;
+  isHost: boolean;
+  canKick: boolean;
 }
 
-export default function PlayerSeat({ player, seatIndex, isOwn }: Props) {
-  const { setSeat, setTeam } = useSocket();
+export default function PlayerSeat({ player, seatIndex, isOwn, isHost: userIsHost, canKick }: Props) {
+  const { setSeat, setTeam, socket } = useSocket();
 
   const handleClick = () => {
     if (!player) {
@@ -19,6 +21,15 @@ export default function PlayerSeat({ player, seatIndex, isOwn }: Props) {
   const handleTeamToggle = () => {
     if (player && isOwn) {
       setTeam(player.team === "blue" ? "red" : "blue");
+    }
+  };
+
+  const handleKick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (player && userIsHost && canKick) {
+      socket?.emit("room:kick", { targetPlayerId: player.id }, (res: any) => {
+        if (!res.success) console.error("Kick failed:", res.error);
+      });
     }
   };
 
@@ -63,14 +74,24 @@ export default function PlayerSeat({ player, seatIndex, isOwn }: Props) {
               <span className="text-xs text-green-400">Ready</span>
             )}
           </div>
-          {isOwn && (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleTeamToggle(); }}
-              className="text-xs text-gray-400 hover:text-white mt-1 underline"
-            >
-              Switch team
-            </button>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            {isOwn && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleTeamToggle(); }}
+                className="text-xs text-gray-400 hover:text-white underline"
+              >
+                Switch team
+              </button>
+            )}
+            {userIsHost && !player.isHost && canKick && (
+              <button
+                onClick={handleKick}
+                className="text-xs text-red-400 hover:text-red-300 underline"
+              >
+                Kick
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="text-gray-600 text-sm italic">Empty</div>

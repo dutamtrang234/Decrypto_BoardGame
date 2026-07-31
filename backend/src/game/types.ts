@@ -99,6 +99,7 @@ export interface ServerToClientEvents {
   "player:team-changed": (data: { playerId: string; players: PlayerData[] }) => void;
   "player:ready-changed": (data: { playerId: string; isReady: boolean; players: PlayerData[] }) => void;
   "host:changed": (data: { newHostId: string; players: PlayerData[] }) => void;
+  "player:kicked": (data: { reason: string }) => void;
   "chat:message": (data: { id: string; playerId: string; nickname: string; content: string; type: string; target: string; createdAt: string }) => void;
   "chat:typing": (data: { playerId: string; nickname: string; isTyping: boolean }) => void;
   "game:started": (data: GameState) => void;

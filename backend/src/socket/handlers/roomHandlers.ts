@@ -182,9 +182,55 @@ export function setupRoomHandlers(io: ServerType, socket: Socket): void {
         players: Array.from(room.players.values()).sort((a, b) => a.seatIndex - b.seatIndex),
       });
 
-      callback({ success: true, data: roomDataToJSON(room) });
+      callback({ success: true, data: { ...roomDataToJSON(room), joinedPlayerId: playerId } });
     } catch {
       callback({ success: false, error: "Failed to join room" });
+    }
+  });
+
+  socket.on("room:kick", ({ targetPlayerId }, callback) => {
+    try {
+      const room = getRoomBySocket(socket.id);
+      if (!room) {
+        callback({ success: false, error: "Not in a room" });
+        return;
+      }
+      if (room.hostId !== socket.data.playerId) {
+        callback({ success: false, error: "Only the host can kick players" });
+        return;
+      }
+      if (room.state !== "waiting") {
+        callback({ success: false, error: "Cannot kick during a game" });
+        return;
+      }
+
+      const kickedPlayer = room.players.get(targetPlayerId);
+      if (!kickedPlayer) {
+        callback({ success: false, error: "Player not found" });
+        return;
+      }
+
+      const kickedSocketId = room.socketIds.get(targetPlayerId);
+      if (kickedSocketId) {
+        const kickedSocket = io.sockets.sockets.get(kickedSocketId);
+        if (kickedSocket) {
+          kickedSocket.leave(room.id);
+          kickedSocket.emit("player:kicked", { reason: "You have been removed by the host" });
+        }
+      }
+
+      room.players.delete(targetPlayerId);
+      room.socketIds.delete(targetPlayerId);
+      userToRoom.delete(kickedPlayer.userId);
+
+      io.to(room.id).emit("player:left", {
+        playerId: targetPlayerId,
+        players: Array.from(room.players.values()).sort((a, b) => a.seatIndex - b.seatIndex),
+      });
+
+      callback({ success: true });
+    } catch {
+      callback({ success: false, error: "Failed to kick player" });
     }
   });
 

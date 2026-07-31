@@ -34,16 +34,26 @@ export default function LobbySettings() {
         </button>
       </div>
 
-      <button
-        onClick={() => setReady(!isReady)}
-        className={`w-full btn ${
-          isReady
-            ? "bg-green-700 hover:bg-green-800 text-white"
-            : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-        }`}
-      >
-        {isReady ? "Ready!" : "Not Ready"}
-      </button>
+      {isReady ? (
+        <div className="space-y-2">
+          <div className="w-full btn bg-green-700 text-white cursor-default">
+            Ready!
+          </div>
+          <button
+            onClick={() => setReady(false)}
+            className="w-full btn bg-gray-700 hover:bg-gray-600 text-gray-300"
+          >
+            Not Ready
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setReady(true)}
+          className="w-full btn-success"
+        >
+          Ready
+        </button>
+      )}
 
       {roomData && (
         <div className="text-center">

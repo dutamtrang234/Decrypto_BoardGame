@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, ty
 import { io, Socket } from "socket.io-client";
 import type { RoomData, GameState, ChatMessage, PlayerData, Team, RoundRecord } from "../types";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "";
 
 interface SocketContextValue {
   socket: Socket | null;
@@ -169,6 +169,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       gameStateRef.current = data.gameState;
     });
 
+    newSocket.on("player:kicked", () => {
+      setRoomData(null);
+      setGameState(null);
+      setMessages([]);
+      roomDataRef.current = null;
+      gameStateRef.current = null;
+    });
+
     newSocket.on("room:deleted", () => {
       setRoomData(null);
       setGameState(null);
@@ -211,7 +219,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       if (!socket) { reject(new Error("Not connected")); return; }
       socket.emit("room:join", { roomCode, nickname }, (res: any) => {
         if (res.success) {
-          const player = res.data.players.find((p: PlayerData) => p.nickname === nickname && p.isConnected);
+          const player = res.data.players.find((p: PlayerData) => p.id === res.data.joinedPlayerId);
           if (player) {
             setPlayerId(player.id);
             setStoredUserId(player.userId);

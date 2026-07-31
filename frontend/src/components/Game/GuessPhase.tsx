@@ -6,13 +6,16 @@ interface Props {
   onSubmit: (indices: number[]) => void;
   disabled: boolean;
   submitted: boolean;
+  isTeamLeader: boolean;
+  isCodeMaster: boolean;
+  teamLeaderName?: string;
 }
 
-export default function GuessPhase({ teamState, onSubmit, disabled, submitted }: Props) {
+export default function GuessPhase({ teamState, onSubmit, disabled, submitted, isTeamLeader, isCodeMaster, teamLeaderName }: Props) {
   const [selected, setSelected] = useState<(number | null)[]>([null, null, null]);
 
   const handleSelect = (clueIndex: number, wordIndex: number) => {
-    if (submitted || disabled) return;
+    if (submitted || disabled || !isTeamLeader) return;
     const next = [...selected];
     next[clueIndex] = wordIndex;
     setSelected(next);
@@ -22,7 +25,7 @@ export default function GuessPhase({ teamState, onSubmit, disabled, submitted }:
 
   return (
     <div className="card space-y-4">
-      <h3 className="text-lg font-bold text-white">Guess Your Code Master's Words</h3>
+      <h3 className="text-lg font-bold text-white">Your Team's Guess</h3>
 
       <p className="text-sm text-gray-400 mb-1">Your team's keywords:</p>
       <div className="grid grid-cols-4 gap-2 mb-4">
@@ -47,12 +50,12 @@ export default function GuessPhase({ teamState, onSubmit, disabled, submitted }:
                 <button
                   key={j}
                   onClick={() => handleSelect(i, j)}
-                  disabled={disabled || submitted}
+                  disabled={disabled || submitted || !isTeamLeader}
                   className={`flex-1 p-3 rounded-lg border-2 text-center text-lg font-bold transition-all ${
                     selected[i] === j
                       ? "bg-green-700/50 border-green-500 text-green-200"
                       : "bg-gray-700/50 border-gray-600 text-gray-400 hover:border-gray-500"
-                  } ${(disabled || submitted) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  } ${(disabled || submitted || !isTeamLeader) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   {j + 1}
                 </button>
@@ -62,11 +65,23 @@ export default function GuessPhase({ teamState, onSubmit, disabled, submitted }:
         ))}
       </div>
 
+      {isCodeMaster && (
+        <div className="text-center text-gray-400 text-sm py-2 bg-gray-800/50 rounded">
+          Waiting for your teammates to submit the guess...
+        </div>
+      )}
+
+      {!isTeamLeader && !isCodeMaster && teamLeaderName && (
+        <div className="text-center text-gray-400 text-sm py-2 bg-gray-800/50 rounded">
+          Waiting for <span className="text-yellow-400 font-medium">{teamLeaderName}</span> to submit the guess...
+        </div>
+      )}
+
       {submitted ? (
         <div className="text-center text-green-400 font-medium py-2 bg-green-900/30 rounded">
           Guess Submitted!
         </div>
-      ) : (
+      ) : isTeamLeader && (
         <button
           onClick={() => onSubmit(selected as number[])}
           disabled={disabled || !allSelected}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import { useRoom } from "../hooks/useRoom";
@@ -7,6 +7,7 @@ import PlayerList from "../components/Lobby/PlayerList";
 import LobbySettings from "../components/Lobby/LobbySettings";
 import GameBoard from "../components/Game/GameBoard";
 import ChatBox from "../components/Chat/ChatBox";
+import type { Team } from "../types";
 
 export default function RoomPage() {
   const { roomCode } = useParams<{ roomCode: string }>();
@@ -30,7 +31,6 @@ export default function RoomPage() {
             setJoining(false);
             return;
           } catch {
-            // Reconnect failed, try fresh join
           }
         }
         await joinRoom(roomCode, storedNickname);
@@ -45,11 +45,19 @@ export default function RoomPage() {
     init();
   }, [roomCode, connected]);
 
+  const isInGame = gameState !== null;
+
+  const playerTeamBadge = useMemo<Team | null>(() => {
+    if (!isInGame || !playerId) return null;
+    const pool = gameState?.players || players;
+    const p = pool.find((pl) => pl.id === playerId);
+    return p?.team || null;
+  }, [isInGame, playerId, players, gameState]);
+
   const handleLeave = async () => {
     try {
       await leaveRoom();
     } catch {
-      // ignore
     }
     navigate("/");
   };
@@ -83,8 +91,6 @@ export default function RoomPage() {
     );
   }
 
-  const isInGame = gameState !== null;
-
   return (
     <div className="flex-1 flex flex-col">
       <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
@@ -96,6 +102,15 @@ export default function RoomPage() {
           {!isInGame && (
             <span className="text-xs text-gray-500">
               ({players.length}/8 players)
+            </span>
+          )}
+          {playerTeamBadge && (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${
+              playerTeamBadge === "blue"
+                ? "bg-blue-700 text-blue-200"
+                : "bg-red-700 text-red-200"
+            }`}>
+              {playerTeamBadge} team
             </span>
           )}
         </div>
@@ -119,7 +134,7 @@ export default function RoomPage() {
         <GameBoard />
       ) : (
         <div className="flex-1 grid grid-cols-[1fr_300px_300px] gap-4 p-4">
-          <PlayerList players={players} playerId={playerId} />
+          <PlayerList players={players} playerId={playerId} hostId={roomData.hostId} gameInProgress={false} />
           <LobbySettings />
           <ChatBox />
         </div>

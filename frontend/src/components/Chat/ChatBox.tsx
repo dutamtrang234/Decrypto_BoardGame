@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSocket } from "../../context/SocketContext";
 import ChatMessage from "./ChatMessage";
-import TypingIndicator from "./TypingIndicator";
 import type { Team } from "../../types";
 
 interface Props {
@@ -9,16 +8,17 @@ interface Props {
 }
 
 export default function ChatBox({ teamChat }: Props) {
-  const { messages, playerId, sendMessage, sendTyping, typingUsers, roomData } = useSocket();
+  const { messages, playerId, sendMessage, roomData } = useSocket();
   const [input, setInput] = useState("");
   const [chatTarget, setChatTarget] = useState<"all" | Team>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const typingTimeout = useRef<ReturnType<typeof setTimeout>>();
   const player = roomData?.players.find((p) => p.id === playerId);
 
   const filteredMessages = teamChat && player
-    ? messages.filter((m) => m.target === player.team || m.target === "all")
-    : messages;
+    ? messages.filter((m) => m.target === player.team)
+    : !teamChat
+      ? messages.filter((m) => m.target === "all")
+      : messages;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -33,13 +33,6 @@ export default function ChatBox({ teamChat }: Props) {
     setInput("");
   };
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-    sendTyping(true);
-    clearTimeout(typingTimeout.current);
-    typingTimeout.current = setTimeout(() => sendTyping(false), 2000);
-  };
-
   return (
     <div className="card flex flex-col h-full">
       <h3 className="text-sm font-semibold text-gray-300 mb-2">
@@ -52,11 +45,10 @@ export default function ChatBox({ teamChat }: Props) {
             key={msg.id}
             message={msg}
             isOwn={msg.playerId === playerId}
+            showTeamBadge={!teamChat}
           />
         ))}
       </div>
-
-      <TypingIndicator users={typingUsers} />
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         {!teamChat && player && (
@@ -72,8 +64,7 @@ export default function ChatBox({ teamChat }: Props) {
         <input
           type="text"
           value={input}
-          onChange={handleInput}
-          onBlur={() => sendTyping(false)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
           className="flex-1 text-sm"
           maxLength={500}

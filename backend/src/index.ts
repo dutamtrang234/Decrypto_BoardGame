@@ -1,3 +1,4 @@
+import path from "path";
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -15,6 +16,12 @@ app.use(cors({ origin: config.frontendUrl, credentials: true }));
 app.use(express.json());
 
 app.use("/api", healthRouter);
+
+const publicDir = path.join(__dirname, "..", "public");
+app.use(express.static(publicDir));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
 
 const io = createSocketServer(httpServer);
 

@@ -28,6 +28,7 @@ export function setupChatHandlers(io: ServerType, socket: Socket): void {
       content: text,
       type: "chat",
       target: msgTarget,
+      team: player.team,
       createdAt: new Date().toISOString(),
     };
 

@@ -46,7 +46,7 @@ export default function ClueEntry({ words, clueOrder, onSubmit, disabled }: Prop
           {clueOrder.map((wordIdx, i) => (
             <div key={i} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
               <label className="block text-sm text-yellow-400 font-semibold mb-1">
-                #{i + 1} → Word #{wordIdx + 1}: <span className="text-yellow-300">{words[wordIdx]}</span>
+                Word #{wordIdx + 1}: <span className="text-yellow-300">{words[wordIdx]}</span>
               </label>
               <input
                 type="text"

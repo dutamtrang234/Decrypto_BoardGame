@@ -126,7 +126,7 @@ export function startGame(players: PlayerData[]): GameState {
     blue,
     red,
     history: [],
-    timer: 120,
+    timer: 90,
     timerStartedAt: null,
     timerEndsAt: null,
     winner: null,
@@ -167,9 +167,9 @@ export function submitClue(
   const bothSubmitted = newState.blue.clues.every((c) => c !== null) && newState.red.clues.every((c) => c !== null);
   if (bothSubmitted) {
     newState.phase = "guess";
-    newState.timer = 90;
+    newState.timer = 60;
     newState.timerStartedAt = Date.now();
-    newState.timerEndsAt = Date.now() + 90_000;
+    newState.timerEndsAt = Date.now() + 60_000;
   } else {
     newState.timerStartedAt = Date.now();
     newState.timerEndsAt = Date.now() + newState.timer * 1000;
@@ -212,9 +212,9 @@ export function submitGuess(
   const bothGuessed = newState.blue.guess !== null && newState.red.guess !== null;
   if (bothGuessed) {
     newState.phase = "interception";
-    newState.timer = 120;
+    newState.timer = 60;
     newState.timerStartedAt = Date.now();
-    newState.timerEndsAt = Date.now() + 120_000;
+    newState.timerEndsAt = Date.now() + 60_000;
   }
 
   return { state: newState };
@@ -266,9 +266,9 @@ export function advanceAfterResolution(state: GameState): { state: GameState; er
   const newState = structuredClone(state);
   newState.round += 1;
   newState.phase = "clue";
-  newState.timer = 120;
+  newState.timer = 90;
   newState.timerStartedAt = Date.now();
-  newState.timerEndsAt = Date.now() + 120_000;
+  newState.timerEndsAt = Date.now() + 90_000;
 
   const blueTeamPlayers = newState.players
     .filter((p) => p.team === "blue")
@@ -317,18 +317,18 @@ export function timeoutPhase(state: GameState): { state: GameState; error?: stri
         newState.red.clues = ["...", "...", "..."];
       }
       newState.phase = "guess";
-      newState.timer = 90;
+      newState.timer = 60;
       newState.timerStartedAt = Date.now();
-      newState.timerEndsAt = Date.now() + 90_000;
+      newState.timerEndsAt = Date.now() + 60_000;
       break;
     }
     case "guess": {
       if (newState.blue.guess === null) newState.blue.guess = [-1, -1, -1];
       if (newState.red.guess === null) newState.red.guess = [-1, -1, -1];
       newState.phase = "interception";
-      newState.timer = 120;
+      newState.timer = 60;
       newState.timerStartedAt = Date.now();
-      newState.timerEndsAt = Date.now() + 120_000;
+      newState.timerEndsAt = Date.now() + 60_000;
       break;
     }
     case "interception": {

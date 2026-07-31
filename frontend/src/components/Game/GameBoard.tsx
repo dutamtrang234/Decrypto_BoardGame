@@ -6,11 +6,13 @@ import ClueEntry from "./ClueEntry";
 import GuessPhase from "./GuessPhase";
 import InterceptionPhase from "./InterceptionPhase";
 import Timer from "./Timer";
+import RoundHistory from "./RoundHistory";
 import ChatBox from "../Chat/ChatBox";
 
 export default function GameBoard() {
   const {
     gameState,
+    roomData,
     submitClue,
     submitGuess,
     submitInterception,
@@ -60,12 +62,44 @@ export default function GameBoard() {
   return (
     <div className="flex-1 grid grid-cols-[1fr_300px] gap-4 p-4">
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <ScoreBoard gameState={gameState} playerTeam={playerTeam} />
-          <Timer
-            timerEndsAt={gameState.timerEndsAt}
-            phase={gameState.phase}
-          />
+        <div className="flex gap-4">
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <ScoreBoard gameState={gameState} playerTeam={playerTeam} />
+            <Timer
+              timerEndsAt={gameState.timerEndsAt}
+              phase={gameState.phase}
+            />
+          </div>
+          {myTeamState && opponentTeamState && (
+            <div className="space-y-1 flex-1">
+              <div>
+                <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">
+                  {playerTeam === "blue" ? "Blue" : "Red"} Keywords
+                </div>
+                <div className="grid grid-cols-4 gap-0.5">
+                  {myTeamState.words.map((word, i) => (
+                    <div key={i} className="bg-gray-700/50 border border-gray-600 rounded px-1 py-0.5 text-center">
+                      <div className="text-[9px] text-gray-500">{i + 1}</div>
+                      <div className="text-[11px] text-gray-200 truncate">{word}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">
+                  {playerTeam === "blue" ? "Red" : "Blue"} Keywords
+                </div>
+                <div className="grid grid-cols-4 gap-0.5">
+                  {opponentTeamState.words.map((_, i) => (
+                    <div key={i} className="bg-gray-800/50 border border-gray-700 rounded px-1 py-0.5 text-center">
+                      <div className="text-[9px] text-gray-500">{i + 1}</div>
+                      <div className="text-[11px] text-gray-600">?</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {gameState.phase === "finished" && (
@@ -104,72 +138,28 @@ export default function GameBoard() {
           </div>
         )}
 
-        {gameState.phase === "guess" && myTeamState && !isCodeMaster && isTeamLeader && (
+        {gameState.phase === "guess" && myTeamState && (
           <GuessPhase
             teamState={myTeamState}
             onSubmit={handleGuessSubmit}
             disabled={false}
             submitted={myTeamState.guess !== null}
+            isTeamLeader={isTeamLeader}
+            isCodeMaster={isCodeMaster}
+            teamLeaderName={roomData?.players.find(p => p.id === myTeamState.teamLeaderId)?.nickname}
           />
         )}
 
-        {gameState.phase === "guess" && myTeamState && !isCodeMaster && !isTeamLeader && (
-          <div className="card text-center py-8">
-            <div className="text-gray-400 text-lg mb-2">
-              Your team leader is submitting the guess...
-            </div>
-            <div className="text-sm text-gray-500 space-y-1">
-              <p>Your team's clues:</p>
-              <p className="text-yellow-400">
-                {myTeamState.clues.filter((c) => c !== null).join(" | ")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {gameState.phase === "guess" && isCodeMaster && (
-          <div className="card text-center py-8">
-            <div className="text-gray-400 text-lg mb-2">
-              Your team is guessing your clues...
-            </div>
-            <div className="text-sm text-gray-500">
-              Your clues:{" "}
-              <span className="text-yellow-400">
-                {myTeamState?.clues.filter((c) => c !== null).join(" | ")}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {gameState.phase === "interception" && myTeamState && !isCodeMaster && isTeamLeader && opponentTeamState && (
+        {gameState.phase === "interception" && myTeamState && opponentTeamState && (
           <InterceptionPhase
             opponentClues={opponentTeamState.clues}
             onSubmit={handleInterceptionSubmit}
             disabled={false}
             submitted={myTeamState.interception !== null}
+            isTeamLeader={isTeamLeader}
+            isCodeMaster={isCodeMaster}
+            teamLeaderName={roomData?.players.find(p => p.id === myTeamState.teamLeaderId)?.nickname}
           />
-        )}
-
-        {gameState.phase === "interception" && myTeamState && !isCodeMaster && !isTeamLeader && opponentTeamState && (
-          <div className="card text-center py-8">
-            <div className="text-gray-400 text-lg mb-2">
-              Your team leader is submitting the interception...
-            </div>
-            <div className="text-sm text-gray-500 space-y-1">
-              <p>Opponent's clues:</p>
-              <p className="text-purple-400">
-                {opponentTeamState.clues.filter((c) => c !== null).join(" | ")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {gameState.phase === "interception" && isCodeMaster && (
-          <div className="card text-center py-8">
-            <div className="text-gray-400 text-lg mb-2">
-              Your team is intercepting the opponent's clues...
-            </div>
-          </div>
         )}
 
         {gameState.phase === "resolution" && (
@@ -190,13 +180,15 @@ export default function GameBoard() {
             )}
           </div>
         )}
+
+        <RoundHistory gameState={gameState} playerTeam={playerTeam} />
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex-1 min-h-[300px]">
+        <div className="h-[400px]">
           <ChatBox teamChat={false} />
         </div>
-        <div className="flex-1 min-h-[200px]">
+        <div className="h-[300px]">
           <ChatBox teamChat={true} />
         </div>
       </div>
